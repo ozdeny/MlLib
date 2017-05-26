@@ -2,6 +2,7 @@ import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import sun.security.pkcs11.wrapper.CK_SSL3_MASTER_KEY_DERIVE_PARAMS
@@ -27,6 +28,32 @@ object Main {
 
     classifyWithSvm(training,test)
 
+    classifyWithDecisionTree(training,test)
+
+  }
+
+
+  def classifyWithDecisionTree(trainingSamples: RDD[LabeledPoint],testSamples:RDD[LabeledPoint]) =
+  {
+    // Train a DecisionTree model.
+    //  Empty categoricalFeaturesInfo indicates all features are continuous.
+    val numClasses = 2
+    val categoricalFeaturesInfo = Map[Int, Int]()
+    val impurity = "gini"
+    val maxDepth = 5
+    val maxBins = 32
+
+    val model = DecisionTree.trainClassifier(trainingSamples, numClasses, categoricalFeaturesInfo,
+      impurity, maxDepth, maxBins)
+
+    // Evaluate model on test instances and compute test error
+    val labelAndPreds = testSamples.map { point =>
+      val prediction = model.predict(point.features)
+      (point.label, prediction)
+    }
+    val testErr = labelAndPreds.filter(r => r._1 != r._2).count().toDouble / testSamples.count()
+    println("Test Error = " + testErr)
+    println("Learned classification tree model:\n" + model.toDebugString)
   }
 
 
