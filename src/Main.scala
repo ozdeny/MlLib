@@ -1,12 +1,14 @@
+import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.{DecisionTree, RandomForest}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import sun.security.pkcs11.wrapper.CK_SSL3_MASTER_KEY_DERIVE_PARAMS
-
 /**
   * Created by Developer on 26.05.2017.
   */
@@ -26,6 +28,11 @@ object Main {
     val training = splits(0).cache()
     val test = splits(1)
 
+    val sqlContext = new SQLContext(sparkContext)
+    import sqlContext.implicits._
+
+
+
     classifyWithSvm(training,test)
 
     classifyWithDecisionTree(training,test)
@@ -33,6 +40,7 @@ object Main {
     classifyWithRandomForest(training,test)
 
   }
+
 
   def classifyWithRandomForest(trainingSamples: RDD[LabeledPoint],testSamples:RDD[LabeledPoint]) ={
 
